@@ -8,7 +8,7 @@ def main():
     parser.add_argument("-input_file", "--input_file", required=True, type=str, default='None')
     parser.add_argument("-template_file", "--template_file", required=True, type=str, default='None')
     parser.add_argument("-output_file", "--output_file", required=True, type=str, default='None')
-    parser.add_argument("-outlier_threshold", "--outlier_threshold", required=False, type=float, default=.5)
+    parser.add_argument("-outlier_threshold", "--outlier_threshold", required=True, type=float, default=.5)
 
     args = vars(parser.parse_args())
 
@@ -16,6 +16,7 @@ def main():
     filename1 = args['input_file']
     filename2 = args['template_file']
 
+    # Add in column names
     columns_list = ['treatment', 'sex','id', 'fam_cq_1', 'fam_cq_2', 'fam_cq_3', 'fam_sq_1', 'fam_sq_2', 'fam_sq_3',
                     'vic_cq_1', 'vic_cq_2', 'vic_cq_3', 'vic_sq_1', 'vic_sq_2', 'vic_sq_3']
 
