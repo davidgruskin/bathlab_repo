@@ -23,7 +23,13 @@ def main():
     raw_data = pd.read_csv(filename1)
     template = pd.read_csv(filename2,index_col=0)
 
-    start_idx = raw_data.index[raw_data["File Name"].str.contains("Well", na=False)].to_list()[0]
+    d = dict(zip(raw_data.columns, range(len(raw_data.columns))))
+    s = raw_data.rename(columns=d).stack()
+
+    sq_column = (s == 'Starting Quantity (SQ)').idxmax()[1]
+    cq_column = (s == 'Cq').idxmax()[1]
+    well_row = (s == 'Well').idxmax()[0]
+
     row_dictionary = {'A': 1, 'B': 2, 'C': 3, 'D': 1, 'E': 2, 'F': 3, 'G': 1, 'H': 2, 'I': 3, 'J': 1, 'K': 2, 'L': 3,
                       'M': 1, 'N': 2, 'O': 3}
     well_counter = 0
@@ -39,9 +45,9 @@ def main():
             animal_ids[x] = animal_ids[x][0:2] + '0' + id_num
     output = pd.DataFrame(columns=columns_list,index = animal_ids)
 
-    for row_num in range(0, raw_data.shape[0] - 19):
-        well = raw_data["File Name"][row_num + 19]
-        fluor = raw_data.iloc[row_num + 19, 1]
+    for row_num in range(well_row+1, raw_data.shape[0]):
+        well = raw_data["File Name"][row_num]
+        fluor = raw_data.iloc[row_num, 1]
         row_id = well[0]
         replicate_num = row_dictionary[row_id]
         column_id = well[1:]
@@ -59,8 +65,8 @@ def main():
             group = template_value[0]
             sex = template_value[1]
             idd = template_value[2:]
-            cq = raw_data.iloc[row_num + 19, 5]
-            sq = raw_data.iloc[row_num + 19, 6]
+            cq = raw_data.iloc[row_num, cq_column]
+            sq = raw_data.iloc[row_num, sq_column]
             output.loc[template_value,"treatment"] = group
             output.loc[template_value, "sex"] = sex
             output.loc[template_value, "id"] = idd
@@ -83,26 +89,26 @@ def main():
                     min_diff = abs(min_num - med_num)
                     if max_diff > args['outlier_threshold'] and min_diff<args['outlier_threshold']:
                         if q_max > q_min:
-                            idx_max = np.where(q_value_df.astype(np.float) == max_num)[0][0]
+                            idx_max = np.where(q_value_df.astype(float) == max_num)[0][0]
                             output.loc[template_value, [fluor_type + q_type + str(idx_max + 1)]] = '*' + output.loc[template_value, [fluor_type + q_type + str(idx_max + 1)]]
                             output.loc[template_value, [fluor_type + 'sq_' + str(idx_max + 1)]] = '*' + output.loc[template_value, [fluor_type + 'sq_' + str(idx_max + 1)]]
 
                     elif min_diff > args['outlier_threshold'] and max_diff< args['outlier_threshold']:
                         if q_min>q_max:
-                            idx_min = np.where(q_value_df.astype(np.float) == min_num)[0][0]
+                            idx_min = np.where(q_value_df.astype(float) == min_num)[0][0]
                             output.loc[template_value, [fluor_type + q_type + str(idx_min + 1)]] = '*' + output.loc[template_value, [fluor_type + q_type + str(idx_min + 1)]]
                             output.loc[template_value, [fluor_type + 'sq_' + str(idx_min + 1)]] = '*' + output.loc[template_value, [fluor_type + 'sq_' + str(idx_min + 1)]]
 
                     elif min_diff and max_diff > args['outlier_threshold']:
-                        idx_min = np.where(q_value_df.astype(np.float) == min_num)[0][0]
+                        idx_min = np.where(q_value_df.astype(float) == min_num)[0][0]
                         output.loc[template_value, [fluor_type + q_type + str(idx_min + 1)]] = '*' + output.loc[template_value, [fluor_type + q_type + str(idx_min + 1)]]
                         output.loc[template_value, [fluor_type + 'sq_' + str(idx_min + 1)]] = '*' + output.loc[template_value, [fluor_type + 'sq_' + str(idx_min + 1)]]
 
-                        idx_max = np.where(q_value_df.astype(np.float) == max_num)[0][0]
+                        idx_max = np.where(q_value_df.astype(float) == max_num)[0][0]
                         output.loc[template_value, [fluor_type + q_type + str(idx_max + 1)]] = '*' + output.loc[template_value, [fluor_type + q_type + str(idx_max + 1)]]
                         output.loc[template_value, [fluor_type + 'sq_' + str(idx_max + 1)]] = '*' + output.loc[template_value, [fluor_type + 'sq_' + str(idx_max + 1)]]
 
-                        idx_med = np.where(q_value_df.astype(np.float) == med_num)[0][0]
+                        idx_med = np.where(q_value_df.astype(float) == med_num)[0][0]
                         output.loc[template_value, [fluor_type + q_type + str(idx_med + 1)]] = '*' + output.loc[template_value, [fluor_type + q_type + str(idx_med + 1)]]
                         output.loc[template_value, [fluor_type + 'sq_' + str(idx_med + 1)]] = '*' + output.loc[template_value, [fluor_type + 'sq_' + str(idx_med + 1)]]
 
